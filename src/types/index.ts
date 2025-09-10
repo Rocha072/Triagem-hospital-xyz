@@ -18,7 +18,9 @@ export interface TriagemRequest {
 }
 
 export interface TriagemResponse {
-  response: string;
+  output?: string;
+  response?: string;
+  message?: string;
   sessionId: string;
 }
 

@@ -73,8 +73,8 @@ export const TriagemApp = () => {
         sessionId,
       });
 
-      // Extract AI response text (check both response and other possible fields)
-      const aiResponseText = response.response || 'Resposta não encontrada';
+      // Extract AI response text (check output, response, and message fields)
+      const aiResponseText = response.output || response.response || response.message || 'Resposta não encontrada';
 
       // Add AI response to chat
       const aiMessage: Message = {
