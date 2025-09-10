@@ -66,6 +66,7 @@ export const useSpeechRecognition = () => {
 
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
   const [transcript, setTranscript] = useState<string>('');
+  const [inactivityTimer, setInactivityTimer] = useState<number | null>(null);
 
   // Inicializar Speech Recognition
   useEffect(() => {
@@ -93,6 +94,12 @@ export const useSpeechRecognition = () => {
       let interimTranscript = '';
       let finalTranscript = '';
 
+      // Clear any existing inactivity timer
+      if (inactivityTimer) {
+        window.clearTimeout(inactivityTimer);
+        setInactivityTimer(null);
+      }
+
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
         if (result[0]) {
@@ -106,8 +113,22 @@ export const useSpeechRecognition = () => {
 
       if (finalTranscript) {
         setTranscript(finalTranscript.trim());
+        // Set 5-second inactivity timer for auto-stop
+        const timer: number = window.setTimeout(() => {
+          if (recognitionInstance && voiceState.isRecording) {
+            recognitionInstance.stop();
+          }
+        }, 5000);
+        setInactivityTimer(timer);
       } else if (interimTranscript) {
         setTranscript(interimTranscript.trim());
+        // Set 5-second inactivity timer for interim results too
+        const timer: number = window.setTimeout(() => {
+          if (recognitionInstance && voiceState.isRecording) {
+            recognitionInstance.stop();
+          }
+        }, 5000);
+        setInactivityTimer(timer);
       }
     };
 
@@ -127,6 +148,9 @@ export const useSpeechRecognition = () => {
     setRecognition(recognitionInstance);
 
     return () => {
+      if (inactivityTimer) {
+        window.clearTimeout(inactivityTimer);
+      }
       recognitionInstance.abort();
     };
   }, []);
@@ -156,12 +180,18 @@ export const useSpeechRecognition = () => {
   const stopRecording = useCallback(() => {
     if (!recognition) return;
 
+    // Clear inactivity timer when manually stopping
+    if (inactivityTimer) {
+      window.clearTimeout(inactivityTimer);
+      setInactivityTimer(null);
+    }
+
     try {
       recognition.stop();
     } catch (error) {
       console.error('Error stopping recognition:', error);
     }
-  }, [recognition]);
+  }, [recognition, inactivityTimer]);
 
   const setProcessing = useCallback((processing: boolean) => {
     setVoiceState(prev => ({ ...prev, isProcessing: processing }));

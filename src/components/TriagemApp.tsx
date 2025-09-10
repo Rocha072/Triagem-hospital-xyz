@@ -73,10 +73,13 @@ export const TriagemApp = () => {
         sessionId,
       });
 
+      // Extract AI response text (check both response and other possible fields)
+      const aiResponseText = response.response || 'Resposta não encontrada';
+
       // Add AI response to chat
       const aiMessage: Message = {
         id: uuidv4(),
-        text: response.response,
+        text: aiResponseText,
         isUser: false,
         timestamp: new Date(),
       };
@@ -85,7 +88,7 @@ export const TriagemApp = () => {
 
       // Convert response to speech
       setSpeaking(true);
-      await elevenLabsService.textToSpeech(response.response);
+      await elevenLabsService.textToSpeech(aiResponseText);
       setSpeaking(false);
 
     } catch (error) {

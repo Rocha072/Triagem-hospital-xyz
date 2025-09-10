@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { TriagemRequest, TriagemResponse } from '../types';
 
-const WEBHOOK_URL = 'http://localhost:5678/webhook-test/TriagemHospitalXYZ';
+const WEBHOOK_URL = 'http://localhost:5678/webhook/TriagemHospitalXYZ';
 
 export class WebhookService {
   static async sendMessage(request: TriagemRequest): Promise<TriagemResponse> {
