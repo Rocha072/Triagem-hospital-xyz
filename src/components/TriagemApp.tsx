@@ -7,11 +7,14 @@ import { ElevenLabsService } from '../services/elevenLabsService';
 import { ChatMessage } from './ChatMessage';
 import { VoiceButton } from './VoiceButton';
 import { StatusIndicator } from './StatusIndicator';
+import { WelcomeScreen } from './WelcomeScreen';
 import { useToast } from '../hooks/use-toast';
 
 export const TriagemApp = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [sessionId] = useState(() => uuidv4());
+  const [atendimentoIniciado, setAtendimentoIniciado] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -36,16 +39,12 @@ export const TriagemApp = () => {
     }
   }, [messages]);
 
-  // Welcome message
+  // Initialize conversation when user starts triage
   useEffect(() => {
-    const welcomeMessage: Message = {
-      id: uuidv4(),
-      text: "Olá! Bem-vindo ao Hospital XYZ. Sou sua assistente virtual de triagem. Clique no microfone abaixo para iniciar nossa conversa e me conte como posso ajudá-lo hoje.",
-      isUser: false,
-      timestamp: new Date(),
-    };
-    setMessages([welcomeMessage]);
-  }, []);
+    if (atendimentoIniciado && !isInitializing) {
+      handleInitialMessage();
+    }
+  }, [atendimentoIniciado]);
 
   // Handle transcript changes
   useEffect(() => {
@@ -54,6 +53,58 @@ export const TriagemApp = () => {
       resetTranscript();
     }
   }, [voiceState.isRecording, transcript]);
+
+  const handleInitialMessage = async () => {
+    setIsInitializing(true);
+    
+    try {
+      // Send initial message to start the conversation
+      const response = await WebhookService.sendMessage({
+        message: "iniciar",
+        sessionId,
+      });
+
+      // Extract AI response text (check output, response, and message fields)
+      const aiResponseText = response.output || response.response || response.message || 'Resposta não encontrada';
+
+      // Add AI response to chat
+      const aiMessage: Message = {
+        id: uuidv4(),
+        text: aiResponseText,
+        isUser: false,
+        timestamp: new Date(),
+      };
+
+      setMessages([aiMessage]);
+
+      // Convert response to speech
+      setSpeaking(true);
+      await elevenLabsService.textToSpeech(aiResponseText);
+      setSpeaking(false);
+
+    } catch (error) {
+      console.error('Error initializing conversation:', error);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Erro inesperado';
+      
+      const errorResponse: Message = {
+        id: uuidv4(),
+        text: `Desculpe, ocorreu um erro ao iniciar a conversa: ${errorMessage}. Tente novamente.`,
+        isUser: false,
+        timestamp: new Date(),
+      };
+
+      setMessages([errorResponse]);
+
+      toast({
+        title: "Erro ao iniciar conversa",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsInitializing(false);
+    }
+  };
 
   const handleUserMessage = async (userText: string) => {
     const userMessage: Message = {
@@ -125,6 +176,15 @@ export const TriagemApp = () => {
     }
   };
 
+  const handleStartTriage = () => {
+    setAtendimentoIniciado(true);
+  };
+
+  // Show welcome screen if triage hasn't started
+  if (!atendimentoIniciado) {
+    return <WelcomeScreen onStartTriage={handleStartTriage} />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-background/80 flex flex-col">
       {/* Header */}
@@ -153,7 +213,18 @@ export const TriagemApp = () => {
             ref={chatContainerRef}
             className="flex-1 bg-card medical-card rounded-xl p-6 mb-6 overflow-y-auto max-h-[60vh] space-y-4"
           >
-            {messages.length === 0 ? (
+            {isInitializing ? (
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                <div className="flex items-center space-x-2">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-current rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                    <div className="w-2 h-2 bg-current rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                    <div className="w-2 h-2 bg-current rounded-full animate-bounce"></div>
+                  </div>
+                  <span>Conectando com a assistente...</span>
+                </div>
+              </div>
+            ) : messages.length === 0 ? (
               <div className="flex items-center justify-center h-full text-muted-foreground">
                 <p>Iniciando conversa...</p>
               </div>
@@ -185,7 +256,7 @@ export const TriagemApp = () => {
             <VoiceButton
               voiceState={voiceState}
               onToggleRecording={handleToggleRecording}
-              disabled={!isSupported}
+              disabled={!isSupported || isInitializing}
             />
           </div>
 
