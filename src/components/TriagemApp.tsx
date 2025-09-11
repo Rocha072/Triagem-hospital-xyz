@@ -15,6 +15,9 @@ export const TriagemApp = () => {
   const [sessionId] = useState(() => uuidv4());
   const [atendimentoIniciado, setAtendimentoIniciado] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
+  const [conversationStatus, setConversationStatus] = useState<'normal' | 'alerta_emergencia' | 'triagem_concluida' | 'ajuda_humana'>('normal');
+  const [showEmergencyAlert, setShowEmergencyAlert] = useState(false);
+  const [finalizationTimer, setFinalizationTimer] = useState<number | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -64,22 +67,25 @@ export const TriagemApp = () => {
         sessionId,
       });
 
-      // Extract AI response text (check output, response, and message fields)
-      const aiResponseText = response.output || response.response || response.message || 'Resposta não encontrada';
-
+      // Handle structured response
+      const structuredResponse = parseStructuredResponse(response);
+      
       // Add AI response to chat
       const aiMessage: Message = {
         id: uuidv4(),
-        text: aiResponseText,
+        text: structuredResponse.message,
         isUser: false,
         timestamp: new Date(),
       };
 
       setMessages([aiMessage]);
+      
+      // Handle status logic
+      handleStatusChange(structuredResponse.status);
 
       // Convert response to speech
       setSpeaking(true);
-      await elevenLabsService.textToSpeech(aiResponseText);
+      await elevenLabsService.textToSpeech(structuredResponse.message);
       setSpeaking(false);
 
     } catch (error) {
@@ -124,22 +130,25 @@ export const TriagemApp = () => {
         sessionId,
       });
 
-      // Extract AI response text (check output, response, and message fields)
-      const aiResponseText = response.output || response.response || response.message || 'Resposta não encontrada';
+      // Handle structured response
+      const structuredResponse = parseStructuredResponse(response);
 
       // Add AI response to chat
       const aiMessage: Message = {
         id: uuidv4(),
-        text: aiResponseText,
+        text: structuredResponse.message,
         isUser: false,
         timestamp: new Date(),
       };
 
       setMessages(prev => [...prev, aiMessage]);
+      
+      // Handle status logic
+      handleStatusChange(structuredResponse.status);
 
       // Convert response to speech
       setSpeaking(true);
-      await elevenLabsService.textToSpeech(aiResponseText);
+      await elevenLabsService.textToSpeech(structuredResponse.message);
       setSpeaking(false);
 
     } catch (error) {
@@ -164,6 +173,89 @@ export const TriagemApp = () => {
     } finally {
       setProcessing(false);
     }
+  };
+
+  // Parse structured response from backend
+  const parseStructuredResponse = (response: any) => {
+    try {
+      // First try to get the structured response
+      const rawData = response.output || response.response || response.message;
+      
+      if (typeof rawData === 'string') {
+        // Try to parse as JSON
+        try {
+          const parsed = JSON.parse(rawData);
+          if (parsed.message && parsed.status) {
+            return {
+              message: parsed.message,
+              status: parsed.status as 'normal' | 'alerta_emergencia' | 'triagem_concluida' | 'ajuda_humana'
+            };
+          }
+        } catch {
+          // If JSON parsing fails, treat as normal message
+          return {
+            message: rawData,
+            status: 'normal' as const
+          };
+        }
+      }
+      
+      // If it's already an object with message and status
+      if (rawData && typeof rawData === 'object' && rawData.message && rawData.status) {
+        return {
+          message: rawData.message,
+          status: rawData.status as 'normal' | 'alerta_emergencia' | 'triagem_concluida' | 'ajuda_humana'
+        };
+      }
+      
+      // Fallback
+      return {
+        message: rawData || 'Resposta não encontrada',
+        status: 'normal' as const
+      };
+    } catch {
+      return {
+        message: 'Resposta não encontrada',
+        status: 'normal' as const
+      };
+    }
+  };
+
+  // Handle status changes
+  const handleStatusChange = (status: 'normal' | 'alerta_emergencia' | 'triagem_concluida' | 'ajuda_humana') => {
+    setConversationStatus(status);
+    
+    if (status === 'alerta_emergencia') {
+      setShowEmergencyAlert(true);
+      // Start 10-second timer to return to welcome screen
+      const timer = window.setTimeout(() => {
+        handleReturnToWelcome();
+      }, 10000);
+      setFinalizationTimer(timer);
+    } else if (status === 'triagem_concluida' || status === 'ajuda_humana') {
+      // Start 10-second timer to return to welcome screen
+      const timer = window.setTimeout(() => {
+        handleReturnToWelcome();
+      }, 10000);
+      setFinalizationTimer(timer);
+    }
+  };
+
+  // Return to welcome screen
+  const handleReturnToWelcome = () => {
+    if (finalizationTimer) {
+      window.clearTimeout(finalizationTimer);
+      setFinalizationTimer(null);
+    }
+    setAtendimentoIniciado(false);
+    setMessages([]);
+    setConversationStatus('normal');
+    setShowEmergencyAlert(false);
+  };
+
+  // Handle finalize button click
+  const handleFinalize = () => {
+    handleReturnToWelcome();
   };
 
   const handleToggleRecording = () => {
@@ -203,6 +295,13 @@ export const TriagemApp = () => {
           </div>
         </div>
       </header>
+
+      {/* Emergency Alert */}
+      {showEmergencyAlert && (
+        <div className="bg-yellow-400 text-black px-4 py-3 text-center font-semibold animate-pulse border-2 border-yellow-500">
+          ATENÇÃO: SITUAÇÃO DE URGÊNCIA DETECTADA. A EQUIPE FOI ACIONADA.
+        </div>
+      )}
 
       {/* Chat Area */}
       <main className="flex-1 container mx-auto px-4 py-6 flex flex-col">
@@ -251,13 +350,22 @@ export const TriagemApp = () => {
             )}
           </div>
 
-          {/* Voice Control */}
+          {/* Voice Control or Finalize Button */}
           <div className="flex justify-center">
-            <VoiceButton
-              voiceState={voiceState}
-              onToggleRecording={handleToggleRecording}
-              disabled={!isSupported || isInitializing}
-            />
+            {conversationStatus === 'triagem_concluida' || conversationStatus === 'ajuda_humana' ? (
+              <button
+                onClick={handleFinalize}
+                className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-4 rounded-lg font-semibold text-lg transition-colors"
+              >
+                Finalizar Atendimento
+              </button>
+            ) : (
+              <VoiceButton
+                voiceState={voiceState}
+                onToggleRecording={handleToggleRecording}
+                disabled={!isSupported || isInitializing || conversationStatus === 'alerta_emergencia'}
+              />
+            )}
           </div>
 
           {/* Current transcript preview */}

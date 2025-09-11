@@ -21,7 +21,13 @@ export interface TriagemResponse {
   output?: string;
   response?: string;
   message?: string;
+  status?: string;
   sessionId: string;
+}
+
+export interface StructuredResponse {
+  message: string;
+  status: 'normal' | 'alerta_emergencia' | 'triagem_concluida' | 'ajuda_humana';
 }
 
 export interface ElevenLabsConfig {
