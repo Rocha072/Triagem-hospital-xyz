@@ -182,9 +182,19 @@ export const TriagemApp = () => {
       const rawData = response.output || response.response || response.message;
       
       if (typeof rawData === 'string') {
+        // Check if it's wrapped in markdown code blocks
+        let cleanedData = rawData;
+        if (rawData.includes('```json') && rawData.includes('```')) {
+          // Extract JSON from markdown code blocks
+          const jsonMatch = rawData.match(/```json\n(.*?)\n```/s);
+          if (jsonMatch && jsonMatch[1]) {
+            cleanedData = jsonMatch[1];
+          }
+        }
+        
         // Try to parse as JSON
         try {
-          const parsed = JSON.parse(rawData);
+          const parsed = JSON.parse(cleanedData);
           if (parsed.message && parsed.status) {
             return {
               message: parsed.message,
@@ -194,7 +204,7 @@ export const TriagemApp = () => {
         } catch {
           // If JSON parsing fails, treat as normal message
           return {
-            message: rawData,
+            message: cleanedData,
             status: 'normal' as const
           };
         }
