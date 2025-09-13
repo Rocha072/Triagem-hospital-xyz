@@ -102,14 +102,23 @@ export const TriagemApp = () => {
       handleStatusChange(structuredResponse.status);
 
       // Convert response to speech
+      console.log('Starting text to speech', { message: structuredResponse.message });
       setSpeaking(true);
       try {
         const audioElement = await elevenLabsService.textToSpeech(structuredResponse.message);
+        console.log('Text to speech result:', audioElement);
         currentAudioRef.current = audioElement;
         
         // Add event listener to stop speaking when audio ends
         if (audioElement) {
-          audioElement.onended = () => setSpeaking(false);
+          audioElement.onended = () => {
+            console.log('Audio ended, setting speaking to false');
+            setSpeaking(false);
+          };
+        } else {
+          // If no audio element was created, reset speaking state
+          console.log('No audio element created, setting speaking to false');
+          setSpeaking(false);
         }
       } catch (error) {
         console.error('Error with text to speech:', error);
@@ -175,14 +184,23 @@ export const TriagemApp = () => {
       handleStatusChange(structuredResponse.status);
 
       // Convert response to speech
+      console.log('Starting text to speech', { message: structuredResponse.message });
       setSpeaking(true);
       try {
         const audioElement = await elevenLabsService.textToSpeech(structuredResponse.message);
+        console.log('Text to speech result:', audioElement);
         currentAudioRef.current = audioElement;
         
         // Add event listener to stop speaking when audio ends
         if (audioElement) {
-          audioElement.onended = () => setSpeaking(false);
+          audioElement.onended = () => {
+            console.log('Audio ended, setting speaking to false');
+            setSpeaking(false);
+          };
+        } else {
+          // If no audio element was created, reset speaking state
+          console.log('No audio element created, setting speaking to false');
+          setSpeaking(false);
         }
       } catch (error) {
         console.error('Error with text to speech:', error);
@@ -332,6 +350,12 @@ export const TriagemApp = () => {
   };
 
   const handleToggleRecording = () => {
+    console.log('handleToggleRecording called', { 
+      isRecording: voiceState.isRecording, 
+      isProcessing: voiceState.isProcessing, 
+      isSpeaking: voiceState.isSpeaking 
+    });
+    
     clearError();
     
     if (voiceState.isRecording) {
@@ -350,6 +374,33 @@ export const TriagemApp = () => {
       
       setSpeaking(false);
       startRecording();
+    }
+  };
+
+  // Emergency reset function to unlock the button
+  const handleEmergencyReset = () => {
+    console.log('Emergency reset triggered');
+    
+    // Stop all speech
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current.currentTime = 0;
+      currentAudioRef.current = null;
+    }
+    
+    // Reset all voice states
+    setSpeaking(false);
+    setProcessing(false);
+    clearError();
+    resetTranscript();
+    
+    // Stop recording if active
+    if (voiceState.isRecording) {
+      stopRecording();
     }
   };
 
@@ -436,7 +487,7 @@ export const TriagemApp = () => {
           </div>
 
           {/* Voice Control or Finalize Button */}
-          <div className="flex justify-center">
+          <div className="flex flex-col items-center space-y-3">
             {conversationStatus === 'triagem_concluida' || conversationStatus === 'ajuda_humana' ? (
               <button
                 onClick={handleFinalize}
@@ -445,11 +496,23 @@ export const TriagemApp = () => {
                 Finalizar Atendimento
               </button>
             ) : (
-              <VoiceButton
-                voiceState={voiceState}
-                onToggleRecording={handleToggleRecording}
-                disabled={!isSupported || isInitializing || conversationStatus === 'alerta_emergencia'}
-              />
+              <>
+                <VoiceButton
+                  voiceState={voiceState}
+                  onToggleRecording={handleToggleRecording}
+                  disabled={!isSupported || isInitializing || conversationStatus === 'alerta_emergencia'}
+                />
+                
+                {/* Emergency reset button (hidden but accessible via double click) */}
+                {(voiceState.isSpeaking || voiceState.isProcessing) && (
+                  <button
+                    onClick={handleEmergencyReset}
+                    className="text-xs text-muted-foreground hover:text-foreground underline"
+                  >
+                    Destravar botão
+                  </button>
+                )}
+              </>
             )}
           </div>
 
