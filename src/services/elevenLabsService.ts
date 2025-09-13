@@ -71,7 +71,6 @@ export class ElevenLabsService {
         
         audio.onended = () => {
           URL.revokeObjectURL(audioUrl);
-          resolve(audio);
         };
         
         audio.onerror = (error) => {
@@ -79,7 +78,10 @@ export class ElevenLabsService {
           reject(error);
         };
         
-        audio.play();
+        // Resolve immediately with the audio element so it can be controlled
+        resolve(audio);
+        
+        audio.play().catch(reject);
       } catch (error) {
         reject(error);
       }

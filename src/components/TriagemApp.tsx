@@ -103,8 +103,18 @@ export const TriagemApp = () => {
 
       // Convert response to speech
       setSpeaking(true);
-      currentAudioRef.current = await elevenLabsService.textToSpeech(structuredResponse.message);
-      setSpeaking(false);
+      try {
+        const audioElement = await elevenLabsService.textToSpeech(structuredResponse.message);
+        currentAudioRef.current = audioElement;
+        
+        // Add event listener to stop speaking when audio ends
+        if (audioElement) {
+          audioElement.onended = () => setSpeaking(false);
+        }
+      } catch (error) {
+        console.error('Error with text to speech:', error);
+        setSpeaking(false);
+      }
 
     } catch (error) {
       console.error('Error initializing conversation:', error);
@@ -166,8 +176,18 @@ export const TriagemApp = () => {
 
       // Convert response to speech
       setSpeaking(true);
-      currentAudioRef.current = await elevenLabsService.textToSpeech(structuredResponse.message);
-      setSpeaking(false);
+      try {
+        const audioElement = await elevenLabsService.textToSpeech(structuredResponse.message);
+        currentAudioRef.current = audioElement;
+        
+        // Add event listener to stop speaking when audio ends
+        if (audioElement) {
+          audioElement.onended = () => setSpeaking(false);
+        }
+      } catch (error) {
+        console.error('Error with text to speech:', error);
+        setSpeaking(false);
+      }
 
     } catch (error) {
       console.error('Error handling user message:', error);
@@ -296,6 +316,18 @@ export const TriagemApp = () => {
 
   // Handle finalize button click
   const handleFinalize = () => {
+    // Stop any ongoing speech immediately
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current.currentTime = 0;
+      currentAudioRef.current = null;
+    }
+    
+    setSpeaking(false);
     handleReturnToWelcome();
   };
 
