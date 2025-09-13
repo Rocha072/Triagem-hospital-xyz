@@ -34,6 +34,24 @@ export const TriagemApp = () => {
   } = useSpeechRecognition();
 
   const elevenLabsService = ElevenLabsService.getInstance();
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Cleanup function to stop all speech when component unmounts
+  useEffect(() => {
+    return () => {
+      // Stop browser speech synthesis
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      
+      // Stop current audio
+      if (currentAudioRef.current) {
+        currentAudioRef.current.pause();
+        currentAudioRef.current.currentTime = 0;
+        currentAudioRef.current = null;
+      }
+    };
+  }, []);
 
   // Auto scroll to bottom when new messages arrive
   useEffect(() => {
@@ -85,7 +103,7 @@ export const TriagemApp = () => {
 
       // Convert response to speech
       setSpeaking(true);
-      await elevenLabsService.textToSpeech(structuredResponse.message);
+      currentAudioRef.current = await elevenLabsService.textToSpeech(structuredResponse.message);
       setSpeaking(false);
 
     } catch (error) {
@@ -148,7 +166,7 @@ export const TriagemApp = () => {
 
       // Convert response to speech
       setSpeaking(true);
-      await elevenLabsService.textToSpeech(structuredResponse.message);
+      currentAudioRef.current = await elevenLabsService.textToSpeech(structuredResponse.message);
       setSpeaking(false);
 
     } catch (error) {
@@ -237,10 +255,10 @@ export const TriagemApp = () => {
     
     if (status === 'alerta_emergencia') {
       setShowEmergencyAlert(true);
-      // Start 10-second timer to return to welcome screen
+      // Start 30-second timer to return to welcome screen
       const timer = window.setTimeout(() => {
         handleReturnToWelcome();
-      }, 10000);
+      }, 30000);
       setFinalizationTimer(timer);
     } else if (status === 'triagem_concluida' || status === 'ajuda_humana') {
       // Start 10-second timer to return to welcome screen
@@ -253,10 +271,23 @@ export const TriagemApp = () => {
 
   // Return to welcome screen
   const handleReturnToWelcome = () => {
+    // Stop any ongoing speech
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current.currentTime = 0;
+      currentAudioRef.current = null;
+    }
+    
     if (finalizationTimer) {
       window.clearTimeout(finalizationTimer);
       setFinalizationTimer(null);
     }
+    
+    setSpeaking(false);
     setAtendimentoIniciado(false);
     setMessages([]);
     setConversationStatus('normal');
@@ -274,6 +305,18 @@ export const TriagemApp = () => {
     if (voiceState.isRecording) {
       stopRecording();
     } else {
+      // Stop any ongoing speech before starting recording
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      
+      if (currentAudioRef.current) {
+        currentAudioRef.current.pause();
+        currentAudioRef.current.currentTime = 0;
+        currentAudioRef.current = null;
+      }
+      
+      setSpeaking(false);
       startRecording();
     }
   };

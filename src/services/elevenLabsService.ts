@@ -27,7 +27,7 @@ export class ElevenLabsService {
     }
   }
 
-  async textToSpeech(text: string): Promise<void> {
+  async textToSpeech(text: string): Promise<HTMLAudioElement | null> {
     try {
       await this.initAudioContext();
       
@@ -53,15 +53,16 @@ export class ElevenLabsService {
       }
 
       const audioBuffer = await response.arrayBuffer();
-      await this.playAudio(audioBuffer);
+      return await this.playAudio(audioBuffer);
     } catch (error) {
       console.error('ElevenLabs TTS error:', error);
       // Fallback para Web Speech API
       this.fallbackTTS(text);
+      return null;
     }
   }
 
-  private async playAudio(audioBuffer: ArrayBuffer): Promise<void> {
+  private async playAudio(audioBuffer: ArrayBuffer): Promise<HTMLAudioElement> {
     return new Promise((resolve, reject) => {
       try {
         const audioBlob = new Blob([audioBuffer], { type: 'audio/mpeg' });
@@ -70,7 +71,7 @@ export class ElevenLabsService {
         
         audio.onended = () => {
           URL.revokeObjectURL(audioUrl);
-          resolve();
+          resolve(audio);
         };
         
         audio.onerror = (error) => {
