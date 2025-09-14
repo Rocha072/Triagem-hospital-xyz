@@ -131,7 +131,7 @@ All colors MUST be HSL for proper theme support.
   } */
   /* Altere esta linha */
   .pulse-recording {
-    animation: pulse-recording 6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    animation: pulse-recording 12s linear infinite;
   }
 
 /*   .pulse-processing {
@@ -139,7 +139,7 @@ All colors MUST be HSL for proper theme support.
   } */
   /*Alterei esta linha */
   .pulse-processing {
-  animation: pulse-processing 10s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation: pulse-processing 15s linear infinite;
   }
 
   .medical-button {
