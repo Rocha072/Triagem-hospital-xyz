@@ -295,8 +295,9 @@ export const TriagemApp = () => {
     
     if (status === 'alerta_emergencia' || status === 'triagem_concluida' || status === 'ajuda_humana') {
       console.log('Starting countdown timer for status:', status);
-      // Start countdown at 30 seconds
-      setReturnCountdown(30);
+      // Set countdown time based on status
+      const countdownTime = status === 'triagem_concluida' ? 60 : 30;
+      setReturnCountdown(countdownTime);
       
       if (status === 'alerta_emergencia') {
         setShowEmergencyAlert(true);

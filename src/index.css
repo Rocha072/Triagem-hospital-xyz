@@ -127,7 +127,7 @@ All colors MUST be HSL for proper theme support.
 /* Medical Animation Classes */
 @layer components {
   .pulse-recording {
-    animation: pulse-recording 10s ease-in-out infinite;
+    animation: pulse-recording 25s ease-in-out infinite;
   }
 
   .pulse-processing {
