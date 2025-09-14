@@ -17,7 +17,8 @@ export const TriagemApp = () => {
   const [isInitializing, setIsInitializing] = useState(false);
   const [conversationStatus, setConversationStatus] = useState<'normal' | 'alerta_emergencia' | 'triagem_concluida' | 'ajuda_humana'>('normal');
   const [showEmergencyAlert, setShowEmergencyAlert] = useState(false);
-  const [finalizationTimer, setFinalizationTimer] = useState<number | null>(null);
+  const [finalizationTimer, setFinalizationTimer] = useState<NodeJS.Timeout | null>(null);
+  const [returnCountdown, setReturnCountdown] = useState<number | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -291,19 +292,28 @@ export const TriagemApp = () => {
   const handleStatusChange = (status: 'normal' | 'alerta_emergencia' | 'triagem_concluida' | 'ajuda_humana') => {
     setConversationStatus(status);
     
-    if (status === 'alerta_emergencia') {
-      setShowEmergencyAlert(true);
-      // Start 30-second timer to return to welcome screen
-      const timer = window.setTimeout(() => {
-        handleReturnToWelcome();
-      }, 30000);
-      setFinalizationTimer(timer);
-    } else if (status === 'triagem_concluida' || status === 'ajuda_humana') {
-      // Start 10-second timer to return to welcome screen
-      const timer = window.setTimeout(() => {
-        handleReturnToWelcome();
-      }, 10000);
-      setFinalizationTimer(timer);
+    if (status === 'alerta_emergencia' || status === 'triagem_concluida' || status === 'ajuda_humana') {
+      // Start countdown at 30 seconds
+      setReturnCountdown(30);
+      
+      // Create interval to update countdown every second
+      const countdownInterval = setInterval(() => {
+        setReturnCountdown(prev => {
+          if (prev === null || prev <= 1) {
+            clearInterval(countdownInterval);
+            handleReturnToWelcome();
+            return null;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      
+      // Store the interval ID so we can clear it later
+      setFinalizationTimer(countdownInterval);
+      
+      if (status === 'alerta_emergencia') {
+        setShowEmergencyAlert(true);
+      }
     }
   };
 
@@ -321,7 +331,7 @@ export const TriagemApp = () => {
     }
     
     if (finalizationTimer) {
-      window.clearTimeout(finalizationTimer);
+      window.clearInterval(finalizationTimer);
       setFinalizationTimer(null);
     }
     
@@ -330,6 +340,7 @@ export const TriagemApp = () => {
     setMessages([]);
     setConversationStatus('normal');
     setShowEmergencyAlert(false);
+    setReturnCountdown(null);
   };
 
   // Handle finalize button click
@@ -485,6 +496,15 @@ export const TriagemApp = () => {
               </div>
             )}
           </div>
+
+          {/* Return Countdown */}
+          {returnCountdown !== null && (
+            <div className="text-center mb-4 p-4 bg-accent/30 border border-border rounded-lg">
+              <p className="text-lg font-semibold text-foreground">
+                Retornando à tela principal em: <span className="text-primary">{returnCountdown} segundos</span>
+              </p>
+            </div>
+          )}
 
           {/* Voice Control or Finalize Button */}
           <div className="flex flex-col items-center space-y-3">

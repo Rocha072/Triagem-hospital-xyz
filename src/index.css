@@ -63,7 +63,7 @@ All colors MUST be HSL for proper theme support.
 
     /* Medical Animations */
     --transition-medical: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --pulse-medical: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    --pulse-medical: pulse 6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -127,11 +127,11 @@ All colors MUST be HSL for proper theme support.
 /* Medical Animation Classes */
 @layer components {
   .pulse-recording {
-    animation: pulse-recording 4s ease-in-out infinite;
+    animation: pulse-recording 6s ease-in-out infinite;
   }
 
   .pulse-processing {
-    animation: pulse-processing 3.5s ease-in-out infinite;
+    animation: pulse-processing 5s ease-in-out infinite;
   }
 
   .medical-button {
