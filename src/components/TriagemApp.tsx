@@ -290,16 +290,24 @@ export const TriagemApp = () => {
 
   // Handle status changes
   const handleStatusChange = (status: 'normal' | 'alerta_emergencia' | 'triagem_concluida' | 'ajuda_humana') => {
+    console.log('Status change:', status);
     setConversationStatus(status);
     
     if (status === 'alerta_emergencia' || status === 'triagem_concluida' || status === 'ajuda_humana') {
+      console.log('Starting countdown timer for status:', status);
       // Start countdown at 30 seconds
       setReturnCountdown(30);
+      
+      if (status === 'alerta_emergencia') {
+        setShowEmergencyAlert(true);
+      }
       
       // Create interval to update countdown every second
       const countdownInterval = setInterval(() => {
         setReturnCountdown(prev => {
+          console.log('Countdown tick:', prev);
           if (prev === null || prev <= 1) {
+            console.log('Countdown finished, returning to welcome');
             clearInterval(countdownInterval);
             handleReturnToWelcome();
             return null;
@@ -310,15 +318,12 @@ export const TriagemApp = () => {
       
       // Store the interval ID so we can clear it later
       setFinalizationTimer(countdownInterval);
-      
-      if (status === 'alerta_emergencia') {
-        setShowEmergencyAlert(true);
-      }
     }
   };
 
   // Return to welcome screen
   const handleReturnToWelcome = () => {
+    console.log('Returning to welcome screen');
     // Stop any ongoing speech
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
@@ -331,7 +336,8 @@ export const TriagemApp = () => {
     }
     
     if (finalizationTimer) {
-      window.clearInterval(finalizationTimer);
+      console.log('Clearing finalization timer');
+      clearInterval(finalizationTimer);
       setFinalizationTimer(null);
     }
     
@@ -345,6 +351,7 @@ export const TriagemApp = () => {
 
   // Handle finalize button click
   const handleFinalize = () => {
+    console.log('Manual finalize clicked');
     // Stop any ongoing speech immediately
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
@@ -355,6 +362,13 @@ export const TriagemApp = () => {
       currentAudioRef.current.currentTime = 0;
       currentAudioRef.current = null;
     }
+    
+    // Clear countdown and timer when manually finalizing
+    if (finalizationTimer) {
+      clearInterval(finalizationTimer);
+      setFinalizationTimer(null);
+    }
+    setReturnCountdown(null);
     
     setSpeaking(false);
     handleReturnToWelcome();
