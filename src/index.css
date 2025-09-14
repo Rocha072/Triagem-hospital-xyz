@@ -131,7 +131,7 @@ All colors MUST be HSL for proper theme support.
   } */
   /* Altere esta linha */
   .pulse-recording {
-    animation: pulse-recording 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    animation: pulse-recording 6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
 /*   .pulse-processing {
@@ -139,7 +139,7 @@ All colors MUST be HSL for proper theme support.
   } */
   /*Alterei esta linha */
   .pulse-processing {
-  animation: pulse-processing 8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation: pulse-processing 10s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
   .medical-button {
@@ -178,22 +178,20 @@ All colors MUST be HSL for proper theme support.
 @keyframes pulse-recording {
   0%, 100% {
     transform: scale(1);
-    box-shadow: 0 0 0 0 hsl(var(--status-recording) / 0.7); /* Sombra inicial um pouco mais forte */
+    box-shadow: 0 0 0 0 hsl(var(--status-recording) / 0.4); /* Sombra inicial um pouco mais forte */
   }
   50% {
-    transform: scale(1.05); /* Um pouco mais de escala para ser mais perceptível */
+    transform: scale(1.02); /* Um pouco mais de escala para ser mais perceptível */
+    box-shadow: 0 0 0 10px hsl(var(--status-recording) / 0);
   }
-  70% {
-    /* A sombra atinge o pico aqui, enquanto o elemento já começou a diminuir */
-    box-shadow: 0 0 0 20px hsl(var(--status-recording) / 0);
-  }
+  
 }
 
 @keyframes pulse-processing {
   0%, 100% {
-    box-shadow: 0 0 0 0 hsl(var(--status-processing) / 0.7);
+    box-shadow: 0 0 0 0 hsl(var(--status-processing) / 0.5);
   }
   50% {
-    box-shadow: 0 0 0 15px hsl(var(--status-processing) / 0);
+    box-shadow: 0 0 0 12px hsl(var(--status-processing) / 0);
   }
 }
