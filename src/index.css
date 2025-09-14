@@ -127,7 +127,7 @@ All colors MUST be HSL for proper theme support.
 /* Medical Animation Classes */
 @layer components {
   .pulse-recording {
-    animation: pulse-recording 25s ease-in-out infinite;
+    animation: pulse-recording 4s ease-in-out infinite;
   }
 
   .pulse-processing {
@@ -157,12 +157,12 @@ All colors MUST be HSL for proper theme support.
 
 @keyframes pulse-recording {
   0%, 100% {
-    box-shadow: 0 0 0 0 hsl(var(--status-recording) / 0.6);
+    box-shadow: 0 0 0 0 hsl(var(--status-recording) / 0.4);
     transform: scale(1);
   }
   50% {
-    box-shadow: 0 0 0 15px hsl(var(--status-recording) / 0);
-    transform: scale(1.03);
+    box-shadow: 0 0 0 20px hsl(var(--status-recording) / 0);
+    transform: scale(1.015);
   }
 }
 
