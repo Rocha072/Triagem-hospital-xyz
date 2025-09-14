@@ -126,12 +126,20 @@ All colors MUST be HSL for proper theme support.
 
 /* Medical Animation Classes */
 @layer components {
-  .pulse-recording {
+/*   .pulse-recording {
     animation: pulse-recording 4s ease-in-out infinite;
+  } */
+  /* Altere esta linha */
+  .pulse-recording {
+    animation: pulse-recording 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
-  .pulse-processing {
+/*   .pulse-processing {
     animation: pulse-processing 8s ease-in-out infinite;
+  } */
+  /*Alterei esta linha */
+  .pulse-processing {
+  animation: pulse-processing 8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
   .medical-button {
@@ -155,7 +163,7 @@ All colors MUST be HSL for proper theme support.
   }
 }
 
-@keyframes pulse-recording {
+/* @keyframes pulse-recording {
   0%, 100% {
     box-shadow: 0 0 0 0 hsl(var(--status-recording) / 0.4);
     transform: scale(1);
@@ -163,6 +171,21 @@ All colors MUST be HSL for proper theme support.
   50% {
     box-shadow: 0 0 0 20px hsl(var(--status-recording) / 0);
     transform: scale(1.015);
+  }
+} */
+
+/*Alterei aqui*/
+@keyframes pulse-recording {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 hsl(var(--status-recording) / 0.7); /* Sombra inicial um pouco mais forte */
+  }
+  50% {
+    transform: scale(1.05); /* Um pouco mais de escala para ser mais perceptível */
+  }
+  70% {
+    /* A sombra atinge o pico aqui, enquanto o elemento já começou a diminuir */
+    box-shadow: 0 0 0 20px hsl(var(--status-recording) / 0);
   }
 }
 
