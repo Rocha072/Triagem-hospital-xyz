@@ -1,4 +1,5 @@
 import { ElevenLabsConfig } from '../types';
+import { supabase } from '@/integrations/supabase/client';
 
 const ELEVENLABS_CONFIG: ElevenLabsConfig = {
   apiKey: '', // Will be set from environment
@@ -31,20 +32,17 @@ export class ElevenLabsService {
     try {
       await this.initAudioContext();
       
-      // Call our Supabase Edge Function instead of ElevenLabs directly
-      const response = await fetch('/api/text-to-speech', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ text }),
+      // Call our Supabase Edge Function
+      const { data, error } = await supabase.functions.invoke('text-to-speech', {
+        body: { text },
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        throw new Error(`TTS API error: ${response.status} - ${errorData.error}`);
+      if (error) {
+        throw new Error(`TTS API error: ${error.message}`);
       }
 
+      // Convert the response to audio buffer
+      const response = new Response(data);
       const audioBuffer = await response.arrayBuffer();
       return await this.playAudio(audioBuffer);
     } catch (error) {
