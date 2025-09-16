@@ -8,6 +8,13 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    proxy: {
+      '/api/text-to-speech': {
+        target: 'https://your-project-id.supabase.co/functions/v1/text-to-speech',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/text-to-speech/, ''),
+      },
+    },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {

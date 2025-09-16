@@ -1,7 +1,7 @@
 import { ElevenLabsConfig } from '../types';
 
 const ELEVENLABS_CONFIG: ElevenLabsConfig = {
-  apiKey: 'sk_d1152d748597f7dea957c2b4867b458d4fe24ee215a9beee',
+  apiKey: '', // Will be set from environment
   voiceId: 'EXAVITQu4vr4xnSDxMaL', // Adam voice
   modelId: 'eleven_multilingual_v2'
 };
@@ -31,25 +31,18 @@ export class ElevenLabsService {
     try {
       await this.initAudioContext();
       
-      const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_CONFIG.voiceId}`, {
+      // Call our Supabase Edge Function instead of ElevenLabs directly
+      const response = await fetch('/api/text-to-speech', {
         method: 'POST',
         headers: {
-          'Accept': 'audio/mpeg',
           'Content-Type': 'application/json',
-          'xi-api-key': ELEVENLABS_CONFIG.apiKey,
         },
-        body: JSON.stringify({
-          text,
-          model_id: ELEVENLABS_CONFIG.modelId,
-          voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.5,
-          },
-        }),
+        body: JSON.stringify({ text }),
       });
 
       if (!response.ok) {
-        throw new Error(`ElevenLabs API error: ${response.status}`);
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(`TTS API error: ${response.status} - ${errorData.error}`);
       }
 
       const audioBuffer = await response.arrayBuffer();
