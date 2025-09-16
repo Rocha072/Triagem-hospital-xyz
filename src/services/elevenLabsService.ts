@@ -2,7 +2,7 @@ import { ElevenLabsConfig } from '../types';
 
 const ELEVENLABS_CONFIG: ElevenLabsConfig = {
   apiKey: '', // Will be set from environment
-  voiceId: 'EXAVITQu4vr4xnSDxMaL', // Adam voice
+  voiceId: 'GUDYcgRAONiI1nXDcNQQ', // Portuguese voice
   modelId: 'eleven_multilingual_v2'
 };
 

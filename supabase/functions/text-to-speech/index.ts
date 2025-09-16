@@ -36,7 +36,7 @@ serve(async (req) => {
       )
     }
 
-    const voiceId = 'EXAVITQu4vr4xnSDxMaL' // Adam voice
+    const voiceId = 'GUDYcgRAONiI1nXDcNQQ' // Portuguese voice
     const modelId = 'eleven_multilingual_v2'
 
     // Call ElevenLabs API
@@ -50,6 +50,7 @@ serve(async (req) => {
       body: JSON.stringify({
         text,
         model_id: modelId,
+        language_code: 'pt-BR',
         voice_settings: {
           stability: 0.5,
           similarity_boost: 0.5,
