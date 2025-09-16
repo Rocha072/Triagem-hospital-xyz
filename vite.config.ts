@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     proxy: {
       '/api/text-to-speech': {
-        target: 'https://your-project-id.supabase.co/functions/v1/text-to-speech',
+        target: 'https://kkewzxmylbuzpspbiaid.supabase.co/functions/v1/text-to-speech',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/text-to-speech/, ''),
       },
