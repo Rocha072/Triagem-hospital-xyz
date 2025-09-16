@@ -1,9 +1,8 @@
 import { ElevenLabsConfig } from '../types';
-import { supabase } from '@/integrations/supabase/client';
 
 const ELEVENLABS_CONFIG: ElevenLabsConfig = {
-  apiKey: '', // Will be set from environment
-  voiceId: 'GUDYcgRAONiI1nXDcNQQ', // Portuguese voice
+  apiKey: 'sk_d1152d748597f7dea957c2b4867b458d4fe24ee215a9beee',
+  voiceId: 'EXAVITQu4vr4xnSDxMaL', // Adam voice
   modelId: 'eleven_multilingual_v2'
 };
 
@@ -32,17 +31,27 @@ export class ElevenLabsService {
     try {
       await this.initAudioContext();
       
-      // Call our Supabase Edge Function
-      const { data, error } = await supabase.functions.invoke('text-to-speech', {
-        body: { text },
+      const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_CONFIG.voiceId}`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'audio/mpeg',
+          'Content-Type': 'application/json',
+          'xi-api-key': ELEVENLABS_CONFIG.apiKey,
+        },
+        body: JSON.stringify({
+          text,
+          model_id: ELEVENLABS_CONFIG.modelId,
+          voice_settings: {
+            stability: 0.5,
+            similarity_boost: 0.5,
+          },
+        }),
       });
 
-      if (error) {
-        throw new Error(`TTS API error: ${error.message}`);
+      if (!response.ok) {
+        throw new Error(`ElevenLabs API error: ${response.status}`);
       }
 
-      // Convert the response to audio buffer
-      const response = new Response(data);
       const audioBuffer = await response.arrayBuffer();
       return await this.playAudio(audioBuffer);
     } catch (error) {
