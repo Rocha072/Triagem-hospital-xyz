@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { TriagemRequest, TriagemResponse } from '../types';
 
-const WEBHOOK_URL = 'https://7427ac951eb2.ngrok-free.app/webhook/TriagemHospitalXYZ';
+const WEBHOOK_URL = 'https://daea12fd54df.ngrok-free.app/webhook/TriagemHospitalXYZ';
 
 export class WebhookService {
   static async sendMessage(request: TriagemRequest): Promise<TriagemResponse> {
